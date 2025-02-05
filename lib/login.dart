@@ -13,26 +13,24 @@ class _LoginScreenState extends State<LoginScreen> {
 
   final SupabaseClient _supabaseClient = Supabase.instance.client;
 
-  final _formKey = GlobalKey<FormState>(); // Kunci untuk form
+  final _formKey = GlobalKey<FormState>(); 
 
   Future<void> _login() async {
     if (_formKey.currentState?.validate() ?? false) {
       final username = _usernameController.text;
       final password = _passwordController.text;
 
-      // Jika hanya username yang kosong
       if (username.isEmpty) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text("Username tidak boleh kosong")),
         );
       }
-      // Jika hanya password yang kosong
+      
       else if (password.isEmpty) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text("Password tidak boleh kosong")),
         );
       } else {
-        // Query ke tabel "user" di Supabase
         final response = await _supabaseClient
             .from('user')
             .select()
@@ -41,18 +39,14 @@ class _LoginScreenState extends State<LoginScreen> {
             .maybeSingle();
 
         if (response != null) {
-          // Login berhasil
+          
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(content: Text("Login Successful! Welcome, ${response['username']}")),
           );
 
-          // Navigasi ke HomeScreen setelah login sukses
-          // Navigator.pushReplacement(
-          //   context,
-          //   MaterialPageRoute(builder: (context) => HomeScreen()),
-          // );
+      
         } else {
-          // Login gagal
+          
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(content: Text("Incorrect username or password.")),
           );
@@ -64,12 +58,12 @@ class _LoginScreenState extends State<LoginScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xfff4f4f5), // Latar belakang abu-abu terang
+      backgroundColor: const Color(0xfff4f4f5), 
       body: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 24),
         child: SingleChildScrollView(
           child: Form(
-            key: _formKey, // Menetapkan formKey pada form
+            key: _formKey, 
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               crossAxisAlignment: CrossAxisAlignment.center,
@@ -88,19 +82,19 @@ class _LoginScreenState extends State<LoginScreen> {
                   controller: _usernameController,
                   decoration: InputDecoration(
                     hintText: "Username",
-                    hintStyle: TextStyle(color: Colors.grey[600]), // Warna hint teks
+                    hintStyle: TextStyle(color: Colors.grey[600]), 
                     filled: true,
-                    fillColor: const Color(0xffe0e0e0), // Latar belakang input field
+                    fillColor: const Color(0xffe0e0e0), 
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(30),
                       borderSide: BorderSide.none,
                     ),
                     contentPadding: const EdgeInsets.symmetric(vertical: 16, horizontal: 20),
                   ),
-                  style: const TextStyle(color: Colors.black), // Warna teks utama
+                  style: const TextStyle(color: Colors.black), 
                   validator: (value) {
                     if (value == null || value.isEmpty) {
-                      return 'Username tidak boleh kosong'; // Pesan error jika kosong
+                      return 'Username tidak boleh kosong'; 
                     }
                     return null;
                   },
@@ -111,19 +105,19 @@ class _LoginScreenState extends State<LoginScreen> {
                   obscureText: true,
                   decoration: InputDecoration(
                     hintText: "Password",
-                    hintStyle: TextStyle(color: Color.fromARGB(255, 136, 132, 132)), // Warna hint teks
+                    hintStyle: TextStyle(color: Color.fromARGB(255, 136, 132, 132)), 
                     filled: true,
-                    fillColor: const Color(0xffe0e0e0), // Latar belakang input field
+                    fillColor: const Color(0xffe0e0e0), 
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(30),
                       borderSide: BorderSide.none,
                     ),
                     contentPadding: const EdgeInsets.symmetric(vertical: 16, horizontal: 20),
                   ),
-                  style: const TextStyle(color: Colors.black), // Warna teks utama
+                  style: const TextStyle(color: Colors.black), 
                   validator: (value) {
                     if (value == null || value.isEmpty) {
-                      return 'Password tidak boleh kosong'; // Pesan error jika kosong
+                      return 'Password tidak boleh kosong'; 
                     }
                     return null;
                   },
@@ -132,7 +126,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 ElevatedButton(
                   onPressed: _login,
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: Color.fromARGB(255, 4, 43, 64), // Warna tombol
+                    backgroundColor: Color.fromARGB(255, 4, 43, 64), 
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(12),
                     ),
@@ -142,9 +136,9 @@ class _LoginScreenState extends State<LoginScreen> {
                   child: const Text(
                     "Login",
                     style: TextStyle(
-                      fontWeight: FontWeight.bold, //untuk mengatur tebal tipis text
-                      fontSize: 16, //untuk mengatur besar kecil text
-                      color: Colors.white, // Warna teks tombol
+                      fontWeight: FontWeight.bold, 
+                      fontSize: 16, 
+                      color: Colors.white, 
                     ),
                   ),
                 ),
