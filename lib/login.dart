@@ -12,25 +12,21 @@ class _LoginScreenState extends State<LoginScreen> {
   final TextEditingController _passwordController = TextEditingController();
 
   final SupabaseClient _supabaseClient = Supabase.instance.client;
-
-  final _formKey = GlobalKey<FormState>(); 
+  final _formKey = GlobalKey<FormState>();
 
   Future<void> _login() async {
     if (_formKey.currentState?.validate() ?? false) {
-      final username = _usernameController.text;
-      final password = _passwordController.text;
+      final username = _usernameController.text.trim();
+      final password = _passwordController.text.trim();
 
-      if (username.isEmpty) {
+      if (username.isEmpty || password.isEmpty) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text("Username tidak boleh kosong")),
+          const SnackBar(content: Text("Username atau Password tidak boleh kosong")),
         );
+        return;
       }
-      
-      else if (password.isEmpty) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text("Password tidak boleh kosong")),
-        );
-      } else {
+
+      try {
         final response = await _supabaseClient
             .from('user')
             .select()
@@ -39,18 +35,24 @@ class _LoginScreenState extends State<LoginScreen> {
             .maybeSingle();
 
         if (response != null) {
-          
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text("Login Successful! Welcome, ${response['username']}")),
+            SnackBar(content: Text("Login Berhasil! Selamat Datang, ${response['username']}")),
           );
 
-      
+          // **Navigasi ke HomeScreen setelah login berhasil**
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (context) => HomeScreen()),
+          );
         } else {
-          
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text("Incorrect username or password.")),
+            const SnackBar(content: Text("Username atau Password salah.")),
           );
         }
+      } catch (error) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text("Error saat login: $error")),
+        );
       }
     }
   }
@@ -58,12 +60,12 @@ class _LoginScreenState extends State<LoginScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xfff4f4f5), 
+      backgroundColor: const Color(0xfff4f4f5),
       body: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 24),
         child: SingleChildScrollView(
           child: Form(
-            key: _formKey, 
+            key: _formKey,
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               crossAxisAlignment: CrossAxisAlignment.center,
@@ -82,22 +84,16 @@ class _LoginScreenState extends State<LoginScreen> {
                   controller: _usernameController,
                   decoration: InputDecoration(
                     hintText: "Username",
-                    hintStyle: TextStyle(color: Colors.grey[600]), 
                     filled: true,
-                    fillColor: const Color(0xffe0e0e0), 
+                    fillColor: const Color(0xffe0e0e0),
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(30),
                       borderSide: BorderSide.none,
                     ),
                     contentPadding: const EdgeInsets.symmetric(vertical: 16, horizontal: 20),
                   ),
-                  style: const TextStyle(color: Colors.black), 
-                  validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return 'Username tidak boleh kosong'; 
-                    }
-                    return null;
-                  },
+                  style: const TextStyle(color: Colors.black),
+                  validator: (value) => value == null || value.isEmpty ? 'Username tidak boleh kosong' : null,
                 ),
                 const SizedBox(height: 16),
                 TextFormField(
@@ -105,41 +101,30 @@ class _LoginScreenState extends State<LoginScreen> {
                   obscureText: true,
                   decoration: InputDecoration(
                     hintText: "Password",
-                    hintStyle: TextStyle(color: Color.fromARGB(255, 136, 132, 132)), 
                     filled: true,
-                    fillColor: const Color(0xffe0e0e0), 
+                    fillColor: const Color(0xffe0e0e0),
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(30),
                       borderSide: BorderSide.none,
                     ),
                     contentPadding: const EdgeInsets.symmetric(vertical: 16, horizontal: 20),
                   ),
-                  style: const TextStyle(color: Colors.black), 
-                  validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return 'Password tidak boleh kosong'; 
-                    }
-                    return null;
-                  },
+                  style: const TextStyle(color: Colors.black),
+                  validator: (value) => value == null || value.isEmpty ? 'Password tidak boleh kosong' : null,
                 ),
                 const SizedBox(height: 30),
                 ElevatedButton(
                   onPressed: _login,
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: Color.fromARGB(255, 4, 43, 64), 
+                    backgroundColor: Color.fromARGB(255, 88, 111, 123),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(12),
                     ),
                     minimumSize: const Size(double.infinity, 50),
-                    elevation: 5,
                   ),
                   child: const Text(
                     "Login",
-                    style: TextStyle(
-                      fontWeight: FontWeight.bold, 
-                      fontSize: 16, 
-                      color: Colors.white, 
-                    ),
+                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: Colors.white),
                   ),
                 ),
               ],
