@@ -3,7 +3,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'login.dart';
 import 'penjualan.dart';
 import 'pelanggan.dart';
-import 'riwayat.dart';
+
 
 class MyApp extends StatelessWidget {
   @override
@@ -29,7 +29,7 @@ class _HomeScreenState extends State<HomeScreen> {
     FoodMenuScreen(),
     PelangganScreen(),
     PenjualanScreen(),
-    PurchaseHistoryScreen(),
+    // PurchaseHistoryScreen(),
   ];
 
   @override
@@ -38,13 +38,10 @@ class _HomeScreenState extends State<HomeScreen> {
       body: _screens[_selectedIndex],
       bottomNavigationBar: BottomNavigationBar(
         items: const [
-          BottomNavigationBarItem(
-              icon: Icon(Icons.restaurant_menu), label: 'Home'),
-          BottomNavigationBarItem(
-              icon: Icon(Icons.receipt_long), label: 'Pelanggan'),
-          BottomNavigationBarItem(icon: Icon(Icons.person), label: 'Transactions'),
-          BottomNavigationBarItem(
-              icon: Icon(Icons.history), label: 'Riwayat'),
+          BottomNavigationBarItem( icon: Icon(Icons.restaurant_menu), label: 'Home'),
+          BottomNavigationBarItem( icon: Icon(Icons.person), label: 'Pelanggan'),
+          BottomNavigationBarItem(icon: Icon(Icons.receipt_long), label: 'Transactions'), 
+          // BottomNavigationBarItem(icon: Icon(Icons.history), label: 'Riwayat'),
         ],
         currentIndex: _selectedIndex,
         selectedItemColor:Color.fromARGB(255, 88, 111, 123),
@@ -370,12 +367,17 @@ class _FoodMenuScreenState extends State<FoodMenuScreen> {
   }
 }
 
-class PurchaseHistoryScreen extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: const Text('Purchase History')),
-      body: Center(child: const Text('Halaman Riwayat Pembelian')),
-    );
-  }
-}
+// class PurchaseHistoryScreen extends StatelessWidget {
+//   @override
+//   Widget build(BuildContext context) {
+//     return Scaffold(
+//       appBar: AppBar(
+//         title: const Text('Riwayat Pembelian'),
+//         backgroundColor: Color.fromARGB(255, 88, 111, 123),
+//       ),
+//       body: Center(child: const Text('Halaman Riwayat Pembelian')),
+//     );
+//   }
+// }
+
+

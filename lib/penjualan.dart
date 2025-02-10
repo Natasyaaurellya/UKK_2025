@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'login.dart';
 import 'riwayat.dart';
 
 class PenjualanScreen extends StatefulWidget {
@@ -72,7 +71,7 @@ class _PenjualanScreenState extends State<PenjualanScreen> {
         totalPrice -= cart[index]['harga'];
       });
     } else {
-      _removeFromCart(index); // If quantity is 0, remove item from cart
+      _removeFromCart(index);
     }
   }
 
@@ -80,33 +79,50 @@ class _PenjualanScreenState extends State<PenjualanScreen> {
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
   }
 
-  void _logout() async {
-    try {
-      await supabase.auth.signOut();
-      _showSnackBar('Logged out successfully');
-    } catch (error) {
-      _showSnackBar('Error logging out: $error');
+  Future<void> _checkoutTransaction() async {
+    if (cart.isEmpty || selectedMember == null) {
+      _showSnackBar('Mohon pilih pelanggan dan tambahkan item ke keranjang.');
+      return;
     }
-  }
 
-  Future<void> _addTransaction() async {
     try {
       final response = await supabase.from('penjualan').insert({
         'pelanggan_id': selectedMember!['pelanggan_id'],
         'total_harga': totalPrice,
         'tanggal_penjualan': DateTime.now().toIso8601String(),
-      });
-      _showSnackBar('Transaction added successfully!');
-      
-      // Reset cart, total price, and selections after successful transaction
+      }).select();
+
+      if (response.isEmpty) {
+        _showSnackBar("❌ Gagal menyimpan transaksi.");
+        return;
+      }
+
+      final int penjualanId = response.first['penjualan_id'];
+
+      for (var item in cart) {
+        await supabase.from('detail_penjualan').insert({
+          'penjualan_id': penjualanId,
+          'produk_id': item['produk_id'],
+          'jumlah_produk': item['quantity'],
+          'subtotal': item['harga'] * item['quantity'],
+          'created_at': DateTime.now().toIso8601String(),
+        }).select();
+      }
+
       setState(() {
         cart.clear();
         totalPrice = 0.0;
         selectedFoodItem = null;
         selectedMember = null;
       });
+
+      _showSnackBar("✅ Transaksi berhasil disimpan!");
+      Navigator.push(
+        context,
+        MaterialPageRoute(builder: (context) => RiwayatPembelianScreen()),
+      );
     } catch (error) {
-      _showSnackBar('Error completing transaction: $error');
+      _showSnackBar('❌ ERROR saat checkout: $error');
     }
   }
 
@@ -115,119 +131,58 @@ class _PenjualanScreenState extends State<PenjualanScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text("Penjualan", style: TextStyle(color: Colors.white)),
-        backgroundColor:Color.fromARGB(255, 88, 111, 123),
+        backgroundColor: Color.fromARGB(255, 88, 111, 123),
         centerTitle: true,
-        automaticallyImplyLeading: false, // Menonaktifkan tanda panah (ikon back)
         actions: [
           IconButton(
-            icon: const Icon(Icons.logout, color: Colors.white),
-            onPressed: _logout, // Logout ketika tombol ditekan
+            icon: const Icon(Icons.history, color: Colors.white),
+            onPressed: () => Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => RiwayatPembelianScreen()),
+            ),
           ),
         ],
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text('Select Food Item', style: TextStyle(color: Color.fromARGB(255, 16, 16, 16))),
-            DropdownButton<Map<String, dynamic>>(
-              value: selectedFoodItem,
-              hint: const Text('Select Food Item', style: TextStyle(color: Color.fromARGB(255, 13, 13, 13))),
-              isExpanded: true,
-              onChanged: (item) {
-                setState(() {
-                  selectedFoodItem = item;
-                });
-              },
-              items: foodItems.map((item) {
-                return DropdownMenuItem(
-                  value: item,
-                  child: Text(item['nama_produk'], style: TextStyle(color: const Color.fromARGB(255, 15, 14, 14))),
-                );
-              }).toList(),
-            ),
-            const SizedBox(height: 16),
-            const Text('Select Member', style: TextStyle(color: Color.fromARGB(255, 16, 16, 16))),
             DropdownButton<Map<String, dynamic>>(
               value: selectedMember,
-              hint: const Text('Select Member', style: TextStyle(color: Color.fromARGB(255, 13, 13, 13))),
+              hint: const Text('Pilih Pelanggan'),
               isExpanded: true,
-              onChanged: (item) {
-                setState(() {
-                  selectedMember = item;
-                });
-              },
-              items: pelanggan.map((item) {
-                return DropdownMenuItem(
-                  value: item,
-                  child: Text(item['nama_pelanggan'], style: TextStyle(color: const Color.fromARGB(255, 12, 12, 12))),
-                );
-              }).toList(),
+              onChanged: (item) => setState(() => selectedMember = item),
+              items: pelanggan.map((item) => DropdownMenuItem(
+                value: item,
+                child: Text(item['nama_pelanggan']),
+              )).toList(),
             ),
-            const SizedBox(height: 16),
-            ElevatedButton(
-              onPressed: _addToCart,
-              child: const Text('Add to Cart', style: TextStyle(color: Colors.white)),
-              style: ElevatedButton.styleFrom(backgroundColor: Color.fromARGB(255, 88, 111, 123)),
+            DropdownButton<Map<String, dynamic>>(
+              value: selectedFoodItem,
+              hint: const Text('Pilih Produk'),
+              isExpanded: true,
+              onChanged: selectedMember == null ? null : (item) => setState(() => selectedFoodItem = item),
+              items: foodItems.map((item) => DropdownMenuItem(
+                value: item,
+                child: Text(item['nama_produk']),
+              )).toList(),
+              disabledHint: const Text("Pilih pelanggan terlebih dahulu"),
             ),
-            const SizedBox(height: 16),
-            const Text('Cart:', style: TextStyle(color: Color.fromARGB(255, 8, 8, 8))),
+            ElevatedButton(onPressed: _addToCart, child: const Text('Tambahkan ke Keranjang')),
             Expanded(
               child: ListView.builder(
                 itemCount: cart.length,
                 itemBuilder: (context, index) {
                   final item = cart[index];
                   return ListTile(
-                    title: Text(item['nama_produk'], style: TextStyle(color: const Color.fromARGB(255, 15, 14, 14))),
-                    subtitle: Text("Price: ${item['harga']} x ${item['quantity']} = ${item['harga'] * item['quantity']}", style: TextStyle(color: const Color.fromARGB(255, 12, 12, 12))),
-                    trailing: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        IconButton(
-                          icon: const Icon(Icons.remove, color: Colors.red),
-                          onPressed: () => _decrementQuantity(index),
-                        ),
-                        Text(item['quantity'].toString(), style: TextStyle(color: const Color.fromARGB(255, 7, 7, 7))),
-                        IconButton(
-                          icon: const Icon(Icons.add, color: Colors.green),
-                          onPressed: () => _incrementQuantity(index),
-                        ),
-                      ],
-                    ),
+                    title: Text(item['nama_produk']),
+                    subtitle: Text("Harga: ${item['harga']} x ${item['quantity']} = ${item['harga'] * item['quantity']}"),
                   );
                 },
               ),
             ),
-            Padding(
-              padding: const EdgeInsets.only(top: 16.0),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  const Text(
-                    'Total Price: ',
-                    style: TextStyle(fontWeight: FontWeight.bold, color: Color.fromARGB(255, 15, 14, 14)),
-                  ),
-                  Text(
-                    'Rp. ${totalPrice.toStringAsFixed(2)}',
-                    style: const TextStyle(fontWeight: FontWeight.bold, color: Color.fromARGB(255, 16, 16, 16)),
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 16),
-            ElevatedButton(
-              onPressed: () {
-                if (cart.isNotEmpty) {
-                  _showSnackBar('Transaction completed!');
-                  _addTransaction();
-                } else {
-                  _showSnackBar('Please select a member and add items to the cart.');
-                }
-              },
-              child: const Text('Complete Transaction', style: TextStyle(color: Colors.white)),
-              style: ElevatedButton.styleFrom(backgroundColor: Color.fromARGB(255, 88, 111, 123)),
-            ),
+            Text('Total Harga: Rp. ${totalPrice.toStringAsFixed(2)}'),
+            ElevatedButton(onPressed: _checkoutTransaction, child: const Text('Selesaikan Transaksi')),
           ],
         ),
       ),
