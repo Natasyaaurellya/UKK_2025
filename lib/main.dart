@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'home.dart';
+import 'admin_home.dart';
 import 'login.dart';
 
 Future<void> main() async {
@@ -24,5 +24,6 @@ class MyApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       home: LoginScreen(),
     );
+    
   }
 }

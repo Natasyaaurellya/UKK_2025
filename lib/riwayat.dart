@@ -12,9 +12,9 @@ class _RiwayatPembelianScreenState extends State<RiwayatPembelianScreen> {
   Future<List<Map<String, dynamic>>> _getRiwayatPembelian() async {
     try {
       final response = await _supabaseClient
-          .from('detail_penjualan')
-          .select('penjualan_id, produk_id, jumlah_produk, subtotal, created_at')
-          .order('created_at', ascending: false);
+          .from('penjualan')
+          .select('penjualan_id, pelanggan_id, total_harga, tanggal_penjualan')
+          .order('tanggal_penjualan', ascending: false);
 
       return response;
     } catch (error) {
@@ -23,28 +23,59 @@ class _RiwayatPembelianScreenState extends State<RiwayatPembelianScreen> {
     }
   }
 
+  String formatTanggal(String isoDate) {
+    DateTime date = DateTime.parse(isoDate);
+    return "${date.day}-${date.month}-${date.year} ${date.hour}:${date.minute}";
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text("Riwayat Pembelian"),
+        title: const Text(
+          "Riwayat Pembelian",
+          style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white),
+        ),
         backgroundColor: Color.fromARGB(255, 88, 111, 123),
         centerTitle: true,
       ),
       body: FutureBuilder<List<Map<String, dynamic>>>(
         future: _getRiwayatPembelian(),
         builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) return const Center(child: CircularProgressIndicator());
-          if (!snapshot.hasData || snapshot.data!.isEmpty) return const Center(child: Text("Belum ada riwayat pembelian"));
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const Center(child: CircularProgressIndicator());
+          }
+          if (!snapshot.hasData || snapshot.data!.isEmpty) {
+            return const Center(
+              child: Text(
+                "Belum ada riwayat pembelian",
+                style: TextStyle(fontSize: 18, color: Colors.grey),
+              ),
+            );
+          }
 
           return ListView.builder(
             padding: const EdgeInsets.all(16),
             itemCount: snapshot.data!.length,
             itemBuilder: (context, index) {
               final item = snapshot.data![index];
-              return ListTile(
-                title: Text("ID Transaksi: ${item['penjualan_id']}"),
-                subtitle: Text("Jumlah: ${item['jumlah_produk']} pcs\nSubtotal: Rp${item['subtotal']}"),
+              return Card(
+                elevation: 4,
+                margin: const EdgeInsets.only(bottom: 12),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: ListTile(
+                  contentPadding: EdgeInsets.all(16),
+                  title: Text(
+                    "ID Transaksi: ${item['penjualan_id']}",
+                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                  ),
+                  subtitle: Text(
+                    "Total: Rp${item['total_harga']}\nTanggal: ${formatTanggal(item['tanggal_penjualan'])}",
+                    style: TextStyle(color: Colors.black87),
+                  ),
+                ),
               );
             },
           );

@@ -2,12 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'riwayat.dart';
 
-class PenjualanScreen extends StatefulWidget {
+class PenjualanPelangganScreen extends StatefulWidget {
   @override
   _PenjualanScreenState createState() => _PenjualanScreenState();
 }
 
-class _PenjualanScreenState extends State<PenjualanScreen> {
+class _PenjualanScreenState extends State<PenjualanPelangganScreen> {
   final SupabaseClient supabase = Supabase.instance.client;
   List<Map<String, dynamic>> foodItems = [];
   List<Map<String, dynamic>> pelanggan = [];
