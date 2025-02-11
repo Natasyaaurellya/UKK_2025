@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'home.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'admin_home.dart'; // Halaman admin
+import 'home_pelanggan.dart'; // Halaman pelanggan
 
 class LoginScreen extends StatefulWidget {
   @override
@@ -19,13 +21,6 @@ class _LoginScreenState extends State<LoginScreen> {
       final username = _usernameController.text.trim();
       final password = _passwordController.text.trim();
 
-      if (username.isEmpty || password.isEmpty) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text("Username atau Password tidak boleh kosong")),
-        );
-        return;
-      }
-
       try {
         final response = await _supabaseClient
             .from('user')
@@ -35,14 +30,31 @@ class _LoginScreenState extends State<LoginScreen> {
             .maybeSingle();
 
         if (response != null) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text("Login Berhasil! Selamat Datang, ${response['username']}")),
-          );
+          String role = response['role']; // Ambil role dari database
 
-          // **Navigasi ke HomeScreen setelah login berhasil**
-          Navigator.pushReplacement(
-            context,
-            MaterialPageRoute(builder: (context) => HomeScreen()),
+          // Simpan role ke SharedPreferences
+          SharedPreferences prefs = await SharedPreferences.getInstance();
+          await prefs.setString('role', role);
+
+          // Navigasi sesuai role
+          if (role == 'admin') {
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(builder: (context) => AdminHomeScreen()),
+            );
+          } else if (role == 'pelanggan') {
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(builder: (context) => HomePelangganScreen()),
+            );
+          } else {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text("Role tidak dikenali.")),
+            );
+          }
+
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text("Login Berhasil! Selamat Datang, $username")),
           );
         } else {
           ScaffoldMessenger.of(context).showSnackBar(
