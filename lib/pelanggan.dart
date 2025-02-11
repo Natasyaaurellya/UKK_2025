@@ -33,22 +33,34 @@ class _PelangganScreenState extends State<PelangganScreen> {
   }
 
   Future<void> _addPelanggan(String nama, String alamat, String nomorTelepon) async {
-    try {
-      final response = await supabase.from('pelanggan').insert({
-        'nama_pelanggan': nama,
-        'alamat': alamat,
-        'nomor_telepon': nomorTelepon,
-      }).select();
+  try {
+    final existingPelanggan = await supabase
+        .from('pelanggan')
+        .select()
+        .eq('nama_pelanggan', nama)
+        .maybeSingle();
 
-      if (response.isNotEmpty) {
-        setState(() {
-          pelanggan.add(response.first);
-        });
-      }
-    } catch (e) {
-      _showError('Gagal menambahkan pelanggan: $e');
+    if (existingPelanggan != null) {
+      _showError('Pelanggan dengan nama dan no tlp ini sudah ada!');
+      return;
     }
+
+    final response = await supabase.from('pelanggan').insert({
+      'nama_pelanggan': nama,
+      'alamat': alamat,
+      'nomor_telepon': nomorTelepon,
+    }).select();
+
+    if (response.isNotEmpty) {
+      setState(() {
+        pelanggan.add(response.first);
+      });
+    }
+  } catch (e) {
+    _showError('Gagal menambahkan pelanggan: $e');
   }
+}
+
 
   Future<void> _editPelanggan(int id, String nama, String alamat, String nomorTelepon) async {
     try {
@@ -195,29 +207,28 @@ class _PelangganScreenState extends State<PelangganScreen> {
     ) ?? false;
   }
 
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Center(
-          child: Text(
-            'Data Pelanggan',
-            style: TextStyle(color: Colors.white),
-          ),
-        ),
-        backgroundColor: const Color.fromARGB(255, 88, 111, 123),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.logout, color: Colors.white),
-            onPressed: _logout,
-          ),
-        ],
-      ),
+@override
+Widget build(BuildContext context) {
+  return Scaffold(
+    appBar: AppBar(
       
-      body: isLoading
-          ? const Center(
-              child: CircularProgressIndicator(),
-            )
+      title: const Text(
+        'Data Pelanggan',
+        style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+      ),
+      backgroundColor: Color.fromARGB(255, 88, 111, 123),
+      centerTitle: true,
+      actions: [
+        IconButton(
+          icon: const Icon(Icons.logout, color: Colors.white),
+          onPressed: _logout,
+        ),
+      ],
+    ),
+    body: Padding(
+      padding: const EdgeInsets.all(12.0),
+      child: isLoading
+          ? const Center(child: CircularProgressIndicator())
           : pelanggan.isEmpty
               ? const Center(
                   child: Text(
@@ -226,7 +237,6 @@ class _PelangganScreenState extends State<PelangganScreen> {
                   ),
                 )
               : ListView.builder(
-                  padding: const EdgeInsets.all(16),
                   itemCount: pelanggan.length,
                   itemBuilder: (context, index) {
                     final item = pelanggan[index];
@@ -234,22 +244,35 @@ class _PelangganScreenState extends State<PelangganScreen> {
                       elevation: 4,
                       margin: const EdgeInsets.symmetric(vertical: 8),
                       shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(10),
+                        borderRadius: BorderRadius.circular(12),
                       ),
                       child: ListTile(
+                        contentPadding: EdgeInsets.all(12),
+                        leading: CircleAvatar(
+                          backgroundColor: Color.fromARGB(255, 88, 111, 123),
+                          child: Text(
+                            item['nama_pelanggan'] != null && item['nama_pelanggan'].isNotEmpty
+                                ? item['nama_pelanggan'][0].toUpperCase()
+                                : '?',
+                            style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+                          ),
+                        ),
                         title: Text(
                           item['nama_pelanggan'] ?? 'Unknown',
-                          style: const TextStyle(fontWeight: FontWeight.bold),
+                          style: TextStyle(fontWeight: FontWeight.bold),
                         ),
                         subtitle: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text('Alamat: ${item['alamat']}'),
-                            Text('Nomor Telepon: ${item['nomor_telepon']}'),
+                            Text(
+                              'Nomor Tlp: ${item['nomor_telepon']}',
+                              style: TextStyle(color: Colors.green),
+                            ),
                           ],
                         ),
-                        trailing: Row(
-                          mainAxisSize: MainAxisSize.min,
+                        trailing: Wrap(
+                          spacing: 6,
                           children: [
                             IconButton(
                               icon: const Icon(Icons.edit, color: Colors.blue),
@@ -265,11 +288,13 @@ class _PelangganScreenState extends State<PelangganScreen> {
                     );
                   },
                 ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () => _showAddPelangganDialog(),
-        backgroundColor: const Color.fromARGB(255, 88, 111, 123),
-        child: const Icon(Icons.add, color: Colors.white),
-      ),
-    );
-  }
+    ),
+    floatingActionButton: FloatingActionButton(
+      onPressed: () => _showAddPelangganDialog(),
+      child: const Icon(Icons.add, color: Colors.white),
+      backgroundColor: Color.fromARGB(255, 88, 111, 123),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+    ),
+  );
+}
 }
