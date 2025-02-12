@@ -101,67 +101,98 @@ class _PelangganScreenState extends State<PelangganScreen> {
   }
 
   void _showAddPelangganDialog({Map<String, dynamic>? pelangganData}) {
-    final TextEditingController namaController = TextEditingController(
-        text: pelangganData != null ? pelangganData['nama_pelanggan'] : '');
-    final TextEditingController alamatController = TextEditingController(
-        text: pelangganData != null ? pelangganData['alamat'] : '');
-    final TextEditingController nomorTeleponController = TextEditingController(
-        text: pelangganData != null ? pelangganData['nomor_telepon'] : '');
+  final TextEditingController namaController = TextEditingController(
+      text: pelangganData != null ? pelangganData['nama_pelanggan'] : '');
+  final TextEditingController alamatController = TextEditingController(
+      text: pelangganData != null ? pelangganData['alamat'] : '');
+  final TextEditingController nomorTeleponController = TextEditingController(
+      text: pelangganData != null ? pelangganData['nomor_telepon'] : '');
+  
+  final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
 
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: Text(pelangganData == null ? 'Tambah Pelanggan' : 'Edit Pelanggan'),
-          content: Column(
+  showDialog(
+    context: context,
+    builder: (BuildContext context) {
+      return AlertDialog(
+        title: Text(pelangganData == null ? 'Tambah Pelanggan' : 'Edit Pelanggan'),
+        content: Form(
+          key: _formKey,
+          child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              TextField(
+              TextFormField(
                 controller: namaController,
                 decoration: const InputDecoration(labelText: 'Nama Pelanggan'),
+                validator: (value) => value == null || value.isEmpty ? 'Nama tidak boleh kosong' : null,
               ),
-              TextField(
+              TextFormField(
                 controller: alamatController,
                 decoration: const InputDecoration(labelText: 'Alamat'),
+                validator: (value) => value == null || value.isEmpty ? 'Alamat tidak boleh kosong' : null,
               ),
-              TextField(
+              TextFormField(
                 controller: nomorTeleponController,
                 decoration: const InputDecoration(labelText: 'Nomor Telepon'),
                 keyboardType: TextInputType.phone,
+                validator: (value) => value == null || value.isEmpty ? 'Nomor telepon tidak boleh kosong' : null,
               ),
             ],
           ),
-          actions: [
-            TextButton(
-              onPressed: () {
-                Navigator.of(context).pop();
-              },
-              child: const Text('Batal'),
-            ),
-            TextButton(
-              onPressed: () {
+        ),
+        actions: [
+          TextButton(
+            onPressed: () {
+              Navigator.of(context).pop();
+            },
+            child: const Text('Batal'),
+          ),
+          TextButton(
+            onPressed: () {
+              if (_formKey.currentState!.validate()) {
                 final String nama = namaController.text;
                 final String alamat = alamatController.text;
                 final String nomorTelepon = nomorTeleponController.text;
 
-                if (nama.isNotEmpty && alamat.isNotEmpty && nomorTelepon.isNotEmpty) {
-                  if (pelangganData == null) {
-                    _addPelanggan(nama, alamat, nomorTelepon);
-                  } else {
-                    _editPelanggan(pelangganData['pelanggan_id'], nama, alamat, nomorTelepon);
-                  }
-                  Navigator.of(context).pop();
+                if (pelangganData == null) {
+                  _addPelanggan(nama, alamat, nomorTelepon);
                 } else {
-                  _showError('Mohon isi semua data dengan benar.');
+                  _editPelanggan(pelangganData['pelanggan_id'], nama, alamat, nomorTelepon);
                 }
-              },
-              child: const Text('Simpan'),
-            ),
-          ],
-        );
-      },
-    );
-  }
+              }
+            },
+            child: const Text('Simpan'),
+
+          ),
+        ],
+      );
+    },
+  );
+}
+
+  //           TextButton(
+  //             onPressed: () {
+  //               final String nama = namaController.text;
+  //               final String alamat = alamatController.text;
+  //               final String nomorTelepon = nomorTeleponController.text;
+
+  //               if (nama.isNotEmpty && alamat.isNotEmpty && nomorTelepon.isNotEmpty) {
+  //                 if (pelangganData == null) {
+  //                   _addPelanggan(nama, alamat, nomorTelepon);
+  //                 } else {
+  //                   _editPelanggan(pelangganData['pelanggan_id'], nama, alamat, nomorTelepon);
+  //                 }
+  //                 Navigator.of(context).pop();
+  //               } else {
+  //                 _showError('Mohon isi semua data dengan benar.');
+  //               }
+  //             },
+  //             child: const Text('Simpan'),
+  //           ),
+  //         ],
+  //       );
+  //     },
+  //   );
+  // }
 
   Future<void> _logout() async {
     bool confirm = await _showLogoutConfirmation();
@@ -211,7 +242,6 @@ class _PelangganScreenState extends State<PelangganScreen> {
 Widget build(BuildContext context) {
   return Scaffold(
     appBar: AppBar(
-      
       title: const Text(
         'Data Pelanggan',
         style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
@@ -220,7 +250,7 @@ Widget build(BuildContext context) {
       centerTitle: true,
       actions: [
         IconButton(
-          icon: const Icon(Icons.logout, color: Colors.white),
+          icon: const Icon(Icons.person, color: Colors.white),
           onPressed: _logout,
         ),
       ],
